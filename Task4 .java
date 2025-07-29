@@ -1,33 +1,30 @@
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
-import java.io.FileWriter;
-import java.io.IOException;
-
-public class WebScraper {
+public class SimpleScraper {
     public static void main(String[] args) {
         String url = "https://webscraper.io/test-sites/e-commerce/static/computers/laptops";
+
         try {
-            Document doc = Jsoup.connect(url).get();
-            Elements items = doc.select(".thumbnail");
+            HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+            connection.setRequestMethod("GET");
 
-            FileWriter csv = new FileWriter("products.csv");
-            csv.append("Name,Price,Rating\n");
+            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            String inputLine;
+            StringBuilder response = new StringBuilder();
 
-            for (Element item : items) {
-                String name = item.select(".title").text();
-                String price = item.select(".price").text();
-                String rating = item.select(".ratings").select("p[data-rating]").attr("data-rating");
-
-                csv.append(name).append(",").append(price).append(",").append(rating).append("\n");
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine).append("\n");
             }
-            csv.flush();
-            csv.close();
-            System.out.println("Data saved to products.csv");
-        } catch (IOException e) {
-            e.printStackTrace();
+            in.close();
+
+            System.out.println("Fetched HTML Content:");
+            System.out.println(response.toString());
+
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
         }
     }
 }
